@@ -1,6 +1,6 @@
 
 # R functions for frequency analysis
-# v0.2.4
+# v0.2.5
 # Guénolé Choné - guenole.chone@concordia.ca
 
 # This code is in most part a copy-paste from: 
@@ -25,7 +25,7 @@
 #' @import lmomco
 #' @import PearsonDS
 #' @import ADGofTest
-FA_fit <- function(series, distribution, method = "lmom", nep = c(0.5, 0.95, 0.99, 1-1/350) ) {
+FA_fit <- function(series, distribution, method = "lmom") {
   
   library(lmomco)
   library(PearsonDS)
@@ -580,22 +580,25 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
   AD_A2 <- c()
   AD_p <- c()
   
-  # Make an histogram of the flow data
-  if (is.null(nb_bins))
+  # A first histogram is computed by not displayed, just to measure the maximum density 
+  if (!is.null(nb_bins))
   {
-    nb_bins <- ceiling(log2(length(data)) + 1)
+    histogram <- hist(flow, breaks = nb_bins, prob = TRUE, plot=FALSE)
+  } else
+  {
+    histogram <- hist(flow, prob = TRUE, plot=FALSE)
   }
-  hist(flow, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge")
-  
-  # list of colors for the distributions
-  colors = c(palette(), rainbow(8))
-  i = 0
+  max_density <- max(histogram$density)
+  curves_xvalues <- seq(from = min(histogram$breaks), to = max(histogram$breaks), by = (max(histogram$breaks) - min(histogram$breaks))/101)
 
+  i = 0
+  list_fa <- list()
   for (distr in list_distr)
   {
+    # do the Frequency Analysis and store fitting metrics
     i <- i + 1
     fa <- FA_fit(series=series, distribution=distr, method=method)
-
+    list_fa[[i]] <- fa
     chi_square <- c(chi_square, fa$chi_square$Chi_Square)
     chi_square_p <- c(chi_square_p, fa$chi_square$p_value)
     AIC <- c(AIC, fa$AIC)
@@ -605,6 +608,37 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
     AD_A2 <- c(AD_A2, fa$AD$statistic)
     AD_p <- c(AD_p, fa$AD$p.value)
     
+    # Check the maximum density for the fitted curve
+    if (!fa$distribution$logTransformed)
+    {
+      fitted_curve <- dlmomco(curves_xvalues, fa$distribution$parameters)
+    }
+    else
+    {
+      # the pdf needs to be transformed 
+      fitted_curve <- dlmomco(log10(curves_xvalues), fa$distribution$parameters)/(log(10)*curves_xvalues)
+    }
+    max_density <- max(max_density, max(fitted_curve))
+
+  }
+
+  # Let's display the histogram and the fitted curves
+  # list of colors for the distributions
+  colors = c(palette(), rainbow(8))
+  # y axis is based on the maximum density on both histogram and curves
+  ylim <- c(0, max_density*1.1)
+  if (!is.null(nb_bins))
+  {
+    hist(flow, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
+  } else
+  {
+    hist(flow, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
+  }
+  i <- 0
+  for (distr in list_distr)
+  {
+    i <- i + 1
+    fa <- list_fa[[i]]
     if (!fa$distribution$logTransformed)
     {
       curve(dlmomco(x, fa$distribution$parameters), add = TRUE, col = colors[i], lwd = 2)
@@ -614,7 +648,6 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
       # the pdf needs to be transformed 
       curve(dlmomco(log10(x), fa$distribution$parameters)/(log(10)*x), add = TRUE, col = colors[i], lwd = 2)
     }
-    
   }
   # Legend
   legend("topright", legend = list_distr, col = colors, lwd = 2)
@@ -635,13 +668,6 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
     AD_p = AD_p,
     AD_rank = rank(AD_A2)
     )
-  
-
-    
-  
-
-  
-  
   
   return(results)
   
