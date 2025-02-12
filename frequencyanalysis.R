@@ -585,7 +585,7 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
   {
     nb_bins <- ceiling(log2(length(data)) + 1)
   }
-  hist(flow, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim=c(0,0.006))
+  hist(flow, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge")
   
   # list of colors for the distributions
   colors = c(palette(), rainbow(8))
