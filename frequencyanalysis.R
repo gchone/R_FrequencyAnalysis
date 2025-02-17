@@ -583,10 +583,10 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
   # A first histogram is computed by not displayed, just to measure the maximum density 
   if (!is.null(nb_bins))
   {
-    histogram <- hist(flow, breaks = nb_bins, prob = TRUE, plot=FALSE)
+    histogram <- hist(series, breaks = nb_bins, prob = TRUE, plot=FALSE)
   } else
   {
-    histogram <- hist(flow, prob = TRUE, plot=FALSE)
+    histogram <- hist(series, prob = TRUE, plot=FALSE)
   }
   max_density <- max(histogram$density)
   curves_xvalues <- seq(from = min(histogram$breaks), to = max(histogram$breaks), by = (max(histogram$breaks) - min(histogram$breaks))/101)
@@ -629,10 +629,10 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
   ylim <- c(0, max_density*1.1)
   if (!is.null(nb_bins))
   {
-    hist(flow, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
+    hist(series, breaks = nb_bins, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
   } else
   {
-    hist(flow, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
+    hist(series, prob = TRUE, main = "Discharge Data with Fitted Distributions", xlab = "Discharge", ylim = ylim)
   }
   i <- 0
   for (distr in list_distr)
