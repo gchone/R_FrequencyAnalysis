@@ -1,6 +1,6 @@
 
 # R functions for frequency analysis
-# v0.2.5
+# v0.2.6
 # Guénolé Choné - guenole.chone@concordia.ca
 
 # This code is in most part a copy-paste from: 
