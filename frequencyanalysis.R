@@ -1,6 +1,6 @@
 
 # R functions for frequency analysis
-# v0.2.6
+# v0.2.7
 # Guénolé Choné - guenole.chone@concordia.ca
 
 # This code is in most part a copy-paste from: 
@@ -516,10 +516,22 @@ frequencyPlot <- function(fa) {
   bwpeaks <- data.frame(PROB = pp(series, sort = FALSE), FLOW = series)
   xbreaks <- c(0.002,0.01,0.1,0.25,0.5,0.8,0.9,0.95,0.975,0.99,0.995, 0.998)
   log.range <- log10(range(series, fa_plot[,-2:-1], na.rm = TRUE))
-  lower <- 10^floor(log.range[1])
+  # With some data/distribution, low return period can have negative values for the lower CI
+  # This result in log.range[1] == NaN. Set the y axis lower bound to 0 in this case
+  if(!is.na(log.range[1]))
+  {
+    lower <- 10^floor(log.range[1])
+    cap <- lower
+    ybreaks <- NULL
+  }
+  else
+  {
+    lower <- 0
+    cap <- 1
+    ybreaks <- 0
+  }
   upper <- 10^ceiling(log.range[2])
-  cap <- lower
-  ybreaks <- NULL
+  
   while(cap < upper) {
     ybreaks <- c(ybreaks, seq(cap, cap*9, by = cap))
     cap <- cap * 10
@@ -618,7 +630,7 @@ FA_comparisons <- function(series, method = "lmom", list_distr = c("wei", "gev",
       # the pdf needs to be transformed 
       fitted_curve <- dlmomco(log10(curves_xvalues), fa$distribution$parameters)/(log(10)*curves_xvalues)
     }
-    max_density <- max(max_density, max(fitted_curve))
+    max_density <- max(max_density, max(fitted_curve, na.rm = TRUE))
 
   }
 
